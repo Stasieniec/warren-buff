@@ -59,7 +59,7 @@ This will start the Flask server and the main loop for monitoring modules
         "max_money_per_transaction": 500
     }
     }
-```
+    ```
 - Stop a Module: Stop a running module by sending a POST request to `/stop_module`.
     ```
     POST /stop_module
