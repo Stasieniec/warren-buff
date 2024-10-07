@@ -3,3 +3,4 @@ requests
 termcolor
 alpaca-trade-api
 json
+argparse
