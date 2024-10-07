@@ -5,9 +5,9 @@ import time
 import threading
 import logging
 
-# Configure logging
+# Configure logging to use bot.log
 logging.basicConfig(
-    filename='logs/utils.log',
+    filename='logs/bot.log',
     level=logging.INFO,
     format='%(asctime)s %(levelname)s:%(message)s'
 )
@@ -33,3 +33,5 @@ def reload_configuration():
         config = json.load(config_file)
         logging.info("Configuration file reloaded.")
         return config
+
+
