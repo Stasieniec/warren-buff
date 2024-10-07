@@ -8,6 +8,8 @@ import json
 import sys
 import os
 import time
+from types import SimpleNamespace
+from termcolor import colored
 
 API_URL = 'http://localhost:5000'  # Base URL for the bot's API
 LOG_FILE = 'logs/bot.log'  # Log file location
@@ -18,13 +20,13 @@ def list_modules(args):
     try:
         available_modules = [f.split('.')[0] for f in os.listdir(modules_dir) if f.endswith('.py') and f != '__init__.py']
         if available_modules:
-            print("Available modules:")
+            print(colored("Available modules:", 'cyan', attrs=['bold']))
             for module in available_modules:
-                print(f"- {module}")
+                print(colored(f"- {module}", 'green'))
         else:
-            print("No modules available.")
+            print(colored("No modules available.", 'yellow'))
     except FileNotFoundError:
-        print(f"Error: The modules directory '{modules_dir}' was not found.")
+        print(colored(f"Error: The modules directory '{modules_dir}' was not found.", 'red'))
         sys.exit(1)
 
 def start_module(args):
@@ -43,7 +45,7 @@ def start_module(args):
         response = requests.post(endpoint, json=payload)
         print_response(response)
     except requests.exceptions.RequestException as e:
-        print(f"Error connecting to the bot: {e}")
+        print(colored(f"Error connecting to the bot: {e}", 'red'))
         sys.exit(1)
 
 def stop_module(args):
@@ -56,7 +58,7 @@ def stop_module(args):
         response = requests.post(endpoint, json=payload)
         print_response(response)
     except requests.exceptions.RequestException as e:
-        print(f"Error connecting to the bot: {e}")
+        print(colored(f"Error connecting to the bot: {e}", 'red'))
         sys.exit(1)
 
 def bot_status(args):
@@ -66,18 +68,18 @@ def bot_status(args):
         response = requests.get(endpoint)
         print_response(response)
     except requests.exceptions.RequestException as e:
-        print(f"Error connecting to the bot: {e}")
+        print(colored(f"Error connecting to the bot: {e}", 'red'))
         sys.exit(1)
 
 def stop_bot(args):
-    print("Stopping the bot...")
+    print(colored("Stopping the bot...", 'yellow', attrs=['bold']))
     try:
         # Stop all running modules
         for module_name in get_running_modules():
             stop_module(SimpleNamespace(module_name=module_name))
-        print("All modules stopped. Bot is shutting down.")
+        print(colored("All modules stopped. Bot is shutting down.", 'green'))
     except KeyboardInterrupt:
-        print("Bot stop interrupted.")
+        print(colored("Bot stop interrupted.", 'red'))
 
 def get_running_modules():
     endpoint = f'{API_URL}/status'
@@ -87,7 +89,7 @@ def get_running_modules():
             data = response.json()
             return data.get('running_modules', [])
     except requests.exceptions.RequestException as e:
-        print(f"Error connecting to the bot: {e}")
+        print(colored(f"Error connecting to the bot: {e}", 'red'))
     return []
 
 def stream_logs(args):
@@ -95,32 +97,30 @@ def stream_logs(args):
         with open(LOG_FILE, 'r') as log_file:
             # Seek to the end of the file
             log_file.seek(0, os.SEEK_END)
-            print("Streaming live logs. Press Ctrl+C to stop.")
+            print(colored("Streaming live logs. Press Ctrl+C to stop.", 'cyan', attrs=['bold']))
             while True:
                 line = log_file.readline()
                 if line:
-                    print(line, end='')
+                    print(colored(line.strip(), 'white'))
                 else:
-                    time.sleep(0.5)
+                    time.sleep(1)  # Increased sleep time to avoid excessive CPU usage
     except FileNotFoundError:
-        print(f"Error: The log file '{LOG_FILE}' was not found.")
+        print(colored(f"Error: The log file '{LOG_FILE}' was not found.", 'red'))
         sys.exit(1)
     except KeyboardInterrupt:
-        print("\nStopped streaming logs.")
+        print(colored("\nStopped streaming logs.", 'yellow'))
 
 def print_response(response):
     if response.status_code == 200:
         data = response.json()
-        print(json.dumps(data, indent=4))
+        print(colored(json.dumps(data, indent=4), 'green'))
     else:
-        print(f"Error: {response.status_code}")
+        print(colored(f"Error: {response.status_code}", 'red'))
         try:
             data = response.json()
-            print(json.dumps(data, indent=4))
+            print(colored(json.dumps(data, indent=4), 'yellow'))
         except json.JSONDecodeError:
-            print(response.text)
-
-from types import SimpleNamespace
+            print(colored(response.text, 'yellow'))
 
 def main():
     parser = argparse.ArgumentParser(description='CLI to control the trading bot.')

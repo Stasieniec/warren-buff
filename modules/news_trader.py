@@ -12,14 +12,22 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s:%(message)s'
 )
 
-log_handler = logging.FileHandler('logs/bot.log')
-log_handler.setLevel(logging.INFO)
-log_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s:%(message)s'))
-log_handler.flush = True
+# Create a FileHandler and add it to the logger
+file_handler = logging.FileHandler('logs/bot.log')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s:%(message)s'))
 
+# Add the handler to the root logger
 logger = logging.getLogger()
-logger.addHandler(log_handler)
-logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
+
+# Optional: Add a StreamHandler to log to console as well, which helps while debugging
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s:%(message)s'))
+logger.addHandler(console_handler)
+
+# Test logging
 
 
 def run(mode, stop_event, params):
