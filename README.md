@@ -118,6 +118,7 @@ def run(mode, stop_event, params):
         # Trading logic here
         time.sleep(60)  # Run every minute
     logging.info("Example Module stopped")
+```
 
 ## Contributing
 Contributions are welcome! Feel free to open issues or submit pull requests.
