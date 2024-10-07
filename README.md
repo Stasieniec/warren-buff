@@ -89,7 +89,7 @@ python cli.py status
 # Stream Logs
 python cli.py stream_logs   
 
-
+```
 ## File Structure
 - bot.py: Core of the bot. Manages modules, API, and main execution loop.
 - cli.py: Command-line interface for interacting with the bot.
