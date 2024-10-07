@@ -4,6 +4,7 @@ import json
 import time
 import threading
 import logging
+import alpaca_trade_api as tradeapi
 
 # Configure logging to use bot.log
 logging.basicConfig(
@@ -27,13 +28,13 @@ console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s:%(message)s'))
 logger.addHandler(console_handler)
 
-# Test logging
 
 # Function to determine if it is time to back up the state (e.g., every hour)
 last_backup_time = None
 BACKUP_INTERVAL = 3600  # 1 hour in seconds
 backup_lock = threading.Lock()
 
+# Function to determine if it is time to back up the state
 def time_to_backup():
     global last_backup_time
     with backup_lock:

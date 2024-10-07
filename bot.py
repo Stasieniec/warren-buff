@@ -9,6 +9,9 @@ import json
 import time
 from utils import configuration_utils, state_utils
 import threading
+from utils.alpaca_utils import save_module_state
+from logging.handlers import RotatingFileHandler
+import sqlite3
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -18,29 +21,52 @@ running_modules = {}
 module_threads = {}
 module_locks = threading.Lock()
 
-# Configure logging to use bot.log
-logging.basicConfig(
-    filename='logs/bot.log',
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s:%(message)s'
-)
-
-# Create a FileHandler and add it to the logger
-file_handler = logging.FileHandler('logs/bot.log')
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s:%(message)s'))
+# Configure logging to use bot.log with log rotation
+log_file_path = 'logs/bot.log'
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s:%(message)s')
+rotating_handler = RotatingFileHandler(log_file_path, maxBytes=5 * 1024 * 1024, backupCount=3)
+rotating_handler.setFormatter(log_formatter)
+rotating_handler.setLevel(logging.INFO)
 
 # Add the handler to the root logger
 logger = logging.getLogger()
-logger.addHandler(file_handler)
+logger.addHandler(rotating_handler)
+logger.setLevel(logging.INFO)
 
 # Optional: Add a StreamHandler to log to console as well, which helps while debugging
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s:%(message)s'))
+console_handler.setFormatter(log_formatter)
 logger.addHandler(console_handler)
 
-# Test logging
+# Ensure database directory and connection
+if not os.path.exists('database'):
+    os.makedirs('database')
+
+conn = sqlite3.connect('database/trading_bot.db', check_same_thread=False)
+cursor = conn.cursor()
+
+# Create tables for module states and action history if they don't exist
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS module_state (
+    module_name TEXT PRIMARY KEY,
+    max_money_per_day REAL,
+    max_money_per_transaction REAL,
+    history TEXT
+)
+''')
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS action_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    module_name TEXT,
+    action TEXT,
+    symbol TEXT,
+    quantity INTEGER,
+    price REAL,
+    timestamp REAL
+)
+''')
+conn.commit()
 
 # Load configuration
 def load_configuration():
@@ -67,6 +93,21 @@ def start_module():
 
             # Create a stop event
             stop_event = threading.Event()
+
+            # Set up initial module state
+            module_state = {
+                "max_money_per_day": params.get("max_money_per_day", 1000),
+                "max_money_per_transaction": params.get("max_money_per_transaction", 500),
+                "history": []
+            }
+            save_module_state(module_name, module_state)
+
+            # Insert or update module state in the database
+            cursor.execute('''
+                INSERT OR REPLACE INTO module_state (module_name, max_money_per_day, max_money_per_transaction, history)
+                VALUES (?, ?, ?, ?)
+            ''', (module_name, module_state['max_money_per_day'], module_state['max_money_per_transaction'], json.dumps(module_state['history'])))
+            conn.commit()
 
             # Start the module in a new thread
             module_thread = threading.Thread(target=module.run, args=(mode, stop_event, params))
@@ -122,7 +163,6 @@ def start_module_internal(module_name, config):
     }
     start_module()
 
-
 def run_flask_app():
     app.run(host='0.0.0.0', port=5000)
 
@@ -166,3 +206,5 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt:
         logging.info('Bot stopped by user')
+    finally:
+        conn.close()

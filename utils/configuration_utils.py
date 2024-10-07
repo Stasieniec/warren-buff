@@ -4,6 +4,7 @@ import os
 import time
 import threading
 import logging
+import alpaca_trade_api as tradeapi
 
 # Configure logging to use bot.log
 logging.basicConfig(
@@ -50,5 +51,3 @@ def reload_configuration():
         config = json.load(config_file)
         logging.info("Configuration file reloaded.")
         return config
-
-
