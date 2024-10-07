@@ -12,6 +12,15 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s:%(message)s'
 )
 
+log_handler = logging.FileHandler('logs/bot.log')
+log_handler.setLevel(logging.INFO)
+log_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s:%(message)s'))
+log_handler.flush = True
+
+logger = logging.getLogger()
+logger.addHandler(log_handler)
+logger.setLevel(logging.INFO)
+
 # Function to determine if it is time to back up the state (e.g., every hour)
 last_backup_time = None
 BACKUP_INTERVAL = 3600  # 1 hour in seconds

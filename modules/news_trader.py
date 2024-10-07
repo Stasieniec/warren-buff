@@ -12,6 +12,16 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s:%(message)s'
 )
 
+log_handler = logging.FileHandler('logs/bot.log')
+log_handler.setLevel(logging.INFO)
+log_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s:%(message)s'))
+log_handler.flush = True
+
+logger = logging.getLogger()
+logger.addHandler(log_handler)
+logger.setLevel(logging.INFO)
+
+
 def run(mode, stop_event, params):
     module_name = params.get('module_name', 'News Trader')
     logging.info(f"{module_name} module started in {mode} mode with params: {params}")
